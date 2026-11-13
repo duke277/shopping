@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>shop小菜助手🍲</title>
+<style>
+  *{box-sizing:border-box;margin: 0;padding: 0;}
+  body {
+    font-family: -apple-system,"Microsoft YaHei",sans-serif;
+    background:#9572b5;
+    color:#9f991f;
+    padding:16px;}
+  .app{max-width: 480px;margin:0 auto;}
+  h1{font-size:22px;text-align:center;color:#416b69;margin-bottom:16px;}
+  .card{
+    background:#416b69;
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:16px;
+    box-shadow:0 4px 12px rgba(50, 115, 124, 0.05);}
+  .recommd-box{text-align:center;}
+  .recommd-test{font-size:24px;font-weight:bold;color:#268686;margin:16px 0;min-height:36px;}
+  .btn-random{
+    background:#f3f8f8;color:#333;border:none;border-radius:20px;
+    padding:10px 24px ;font-size:16px;cursor:pointer;width:100%;
+  }
+  .btn-random:active{opacity:0.8;}
+  .input-row{display:flex;gap:8px;margin-bottom:16px;}
+  input{
+    flex:1;font-size:15px;padding:12px;border:none;
+    border-radius: 8px;outline:none;background:#f3f8f8;color:#333;
+  }
+  input:focus{border-color:#48888e;}
+  .btn-add{
+    background:#f3f8f8;color:#48888e;border:none;border-radius: 8px;
+    padding:0 16px;font-size:15px;cursor:pointer;
+  }
+  .btn-add:active{opacity:0.8;}
+
+  u1{list-style:none;}
+  li{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-bottom:1px dashed #48888e;
+  }
+  li:last-child{border-bottom:none;}
+
+  .item-left{display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .item-left input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #296c76;
+  }
+  .item-text{font-size:16px;color:#fff;transition:all 0.2s;}
+  .done .item-text{text-decoration:line-through;color:#999;}
+
+  .btn-del{
+    background:none;border:none;color:#f3f8f8;font-size:14px;
+    cursor:pointer;padding:4px;
+  }
+
+  .empty{text-align:center;color:#f3f8f8;font-size:14px;padding:10px 0;}
+  .clear-all{text-align:center;margin-top:16px;font-size:13px;color:#48888e;cursor:pointer;
+text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<div class="app">
+    <h1>🛒小菜助手</h1>
+
+<div class="card recommend-box">
+<div style="font-size:14px;color:#f3f8f8;">今天吃什么哇？</div>
+<div class="recommed-test" id="dishName" style="color:#f3f8f8;">点击下方按钮</div>
+<button class="btn-random" onclick="rollDish()">🎲随机推荐一道菜</button>
+</div>
+
+<div class="card">
+  <div style ="font-size:16px;font-weight:bold;margin-bottom:12px;color:#f3f8f8">📝今日买菜清单</div>
+  <div class ="input-row">
+    <input type ="text" id="itemInput" placeholder="买什么？比如：西红柿" onkeypress="handlekeyPress(event)">
+    <button class="btn-add" onclick="addItem()">添加</button>
+</div>
+
+
+<ul id="list"></ul>
+  <div class="clear-all" onclick="clearAll()" style="color:#f3f8f8;">清空已买物品</div>
+ </div>
+</div>
+
+<script>
+  const dishes =[
+    "土豆丝炒肉🥔","黄瓜炒肉🥒","青椒炒肉🫑","秀珍菇炒肉","金针菇焖肉碎","番茄炒蛋🍅","黄瓜炒蛋🥒","韭菜炒蛋🥚",
+    "火腿蛋","水煮肉片","胡萝卜炒肉🥕","木耳炒肉","木耳炒蛋🥚","腐竹炒肉","炒豆皮","水蒸蛋🥚","土豆丝胡萝卜🥔",
+    "胡萝卜炒蛋🥕","红烧茄子🍆","麻婆豆腐🥘","腐皮炒肉","西芹炒肉","莴笋炒肉","炒豆芽","南瓜肉末","肉末茄子🍆",
+    "苦瓜炒蛋","炸酥肉","清蒸鲈鱼🐟","玉米肉片🌽","玉米豌豆🫛","煎红鱼","肉末粉丝","虾仁冬瓜片","花椒炒肉",
+    "西兰花炒肉🥦","花菜番茄🍅","花菜炒肉","杏鲍菇炒肉","炒豆角","酸菜鱼🐟","酸菜肉片","酸甜鱼🐟","肉末豆腐🥘",
+    "梅菜扣肉","炸豆干","番茄鱼头🍅","卤鹌鹑蛋","清蒸排骨","鱿鱼白萝卜丝","白菜炒鱿鱼","包菜","菜心🥬","芥兰",
+    "春菜煲","炒生菜","白菜","肉末豆干","煎草鱼片","酸辣土豆丝🥔","焖牛杂","炒牛肉","炸虾🦐","白切鸡","窑鸡",
+    "炒午餐肉","鱼丸","炒荷兰豆","莲藕排骨汤🍖","饺子🥟","炒河粉🍝","炒粉签","炒饭🍛","炒面","番茄面🍜",
+    "牛肉面🍜","甜莲藕","炸春卷","甜番薯山药🍠","玉米胡萝卜汤🌽","菠萝果肉","炸虾枣","香菇滑鸡🍄‍🟫","微辣田鸡🌶️",
+    "银耳汤","莲子汤","薏米冬瓜汤","青菜豆腐汤","紫菜汤","蛋花汤","炒蛋🍳","山药排骨汤🍖","炒火腿","腊肠炒饭",
+    "白萝卜汤","乌鸡汤","苦瓜汤","酸菜黄豆","五花肉🥩","猪杂汤","可乐鸡翅","凉拌","焖鸡腿🍗","寿司🍣","手撕鸡",
+    "蒜蓉西兰花🥦","蒜蓉青瓜🧄","鲍鱼粉丝","炒韭菜花","乌豆🫘","洋葱炒肉🧅" ,"绿豆汤","八宝粥","粿卷","鸭血",
+    "番茄牛腩🍅" ,"板栗鸡汤🌰","香菇炒肉","香菇炒蛋🥚","香煎鸡翅","萝卜炖牛腩" ,"辣炒花甲","丝瓜炒蛋","丝瓜汤",
+    "拍黄瓜","黄花菜炒肉","鹿茸菇排骨汤","柠檬鸡爪","牛肉炒菠菜","羊肚菌炒肉","西兰花炒鸡胸肉🥦","鲫鱼汤","娃娃菜"            
+  ];
+
+function rollDish() {
+  const randomIndex = Math.floor(Math.random()*dishes.length);
+  document.getElementById('dishName').innerText=dishes[randomIndex];
+}
+
+const STORAGE_KEY='shopping-list';
+let items =JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+function save() {
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
+}
+
+function addItem (){
+  const input=document.getElementById('itemInput');
+  const text =input.value.trim();
+  if (!text) return;
+
+  items.unshift({id:Date.now(),text:text,done:false});
+  input.value='';
+  save();
+  render();
+}
+
+function handlekeyPress(e) {
+  if (e.key==='Enter') addItem();
+}
+
+function toggleDone(id) {
+  const item = items.find(i=>i.id === id);
+  if(item) {
+    item.done = !item.done;
+    save();
+    render();
+  }
+}
+
+function deleteItem(id,event) {
+  event.stopPropagation();
+  items = items.filter(i => i.id !== id);
+  save();
+  render();
+}
+
+function clearAll(){
+  items = items.filter(i => !i.done);
+  save();
+  render();
+}
+
+function render() {
+  const listEl=document.getElementById('list');
+  if(items.length === 0) {
+    listEl.innerHTML = '<li class="empty">清单空空的,赶紧记下来吧-</li>';
+    return;
+  }
+
+  listEl.innerHTML = items.map(item => `
+   <li class="${item.done ? 'done': ``}">
+    <div class="item-left"onclick="toggleDone(${item.id})">
+      <input type ="checkbox"${item.done ? 'checked' : ``}onclick="event.stopPropagation();toggleDone(${item.id})">
+      <span class="item-text">${item.text}</span>
+    </div>
+    <button class="btn-del"onclick="deleteItem(${item.id},event)">删除</button>
+  </li>
+  `).join('');
+}
+
+render();
+</script>
+
+</body>
+</html>
+
